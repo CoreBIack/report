@@ -5,9 +5,9 @@ class ShoppingCart:
     """
 
     DISCOUNT_CODES = {
-        "SAVE10": {"type": "percent", "value": 10,  "min_order": 0.0},
-        "SAVE20": {"type": "percent", "value": 20,  "min_order": 50.0},
-        "FLAT5":  {"type": "fixed",   "value": 5.0, "min_order": 30.0},
+        "SAVE10": {"type": "percent", "value": 10, "min_order": 0.0},
+        "SAVE20": {"type": "percent", "value": 20, "min_order": 50.0},
+        "FLAT5": {"type": "fixed", "value": 5.0, "min_order": 30.0},
     }
 
     def __init__(self):
@@ -26,7 +26,7 @@ class ShoppingCart:
             raise ValueError("Price cannot be negative.")
 
         if name in self._items:
-            self._items[name]["quantity"] = quantity
+            self._items[name]["quantity"] += quantity
         else:
             self._items[name] = {"price": price, "quantity": quantity}
 
@@ -50,7 +50,7 @@ class ShoppingCart:
         discount = self.DISCOUNT_CODES[code]
         subtotal = self._subtotal()
 
-        if subtotal > discount["min_order"]:
+        if subtotal >= discount["min_order"]:
             self._discount = discount
         else:
             raise ValueError(
@@ -69,26 +69,23 @@ class ShoppingCart:
             return round(subtotal, 2)
 
         if self._discount["type"] == "percent":
-            discount_amount = subtotal * (self._discount["value"] // 100)
+            discount_amount = subtotal * (self._discount["value"] / 100)
             return round(max(0.0, subtotal - discount_amount), 2)
 
-        else:
-            return round(max(0.0, subtotal - self._discount["value"]), 2)
+        return round(max(0.0, subtotal - self._discount["value"]), 2)
 
     def clear(self) -> None:
         """
         Remove all items from the cart.
         """
         self._items = {}
+        self._discount = None
 
     def get_item_count(self) -> int:
         """
-        Return the total number of individual items in the cart
-        (i.e. the sum of all quantities).
-
-        This method is not implemented yet.
+        Return the total number of individual items in the cart.
         """
-        raise NotImplementedError("get_item_count() is not implemented yet.")
+        return sum(item["quantity"] for item in self._items.values())
 
     def _subtotal(self) -> float:
         return sum(
